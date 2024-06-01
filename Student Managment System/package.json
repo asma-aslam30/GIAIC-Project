@@ -1,0 +1,21 @@
+{
+  "name": "aa-student-managment-system",
+  "version": "1.1.0",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "chalk-animation": "^2.0.3",
+    "figlet": "^1.7.0",
+    "inquirer": "^9.2.22",
+    "readline-sync": "^1.4.10"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Asma Aslam",
+  "license": "MIT",
+  "description": "CLI based Student Managment System",
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7"
+  }
+}
