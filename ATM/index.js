@@ -1,44 +1,67 @@
-#! /usr/bin/env node
 import inquirer from 'inquirer';
-let myBalance = 100000;
-let myPinCode = 1234;
-let pinAnswer = await inquirer.prompt([
+// Language Selection
+let languageAnswer = await inquirer.prompt([
     {
-        name: 'pin',
-        message: 'Enter your pin:',
-        type: 'number',
+        name: 'language',
+        message: 'Select your language:',
+        type: 'list',
+        choices: ['English', 'Chinese', 'Spanish'],
     },
 ]);
-if (pinAnswer.pin === myPinCode) {
-    console.log('Correct pincode');
-    let operationAns = await inquirer.prompt([
+const language = languageAnswer.language;
+let myBalance = 100000;
+let myPinCode = 1234;
+let attempts = 0;
+let isLocked = false;
+while (attempts < 3) {
+    let pinAnswer = await inquirer.prompt([
         {
-            name: 'operations',
-            message: 'Please! Select options....',
-            type: 'list',
-            choices: ['withdraw', 'checkbalance'],
+            name: 'pin',
+            message: language === 'Chinese' ? '请输入您的密码：' : language === 'Spanish' ? 'Ingrese su PIN:' : 'Enter your pin:',
+            type: 'number',
         },
     ]);
-    if (operationAns.operations === 'withdraw') {
-        let amountAns = await inquirer.prompt([
+    if (pinAnswer.pin === myPinCode) {
+        console.log(language === 'Chinese' ? '正确的PIN码' : language === 'Spanish' ? 'PIN correcto' : 'Correct pincode');
+        attempts = 0; // Reset attempts on successful login
+        let operationAns = await inquirer.prompt([
             {
-                name: 'amount',
-                message: 'Enter your amount',
-                type: 'number',
+                name: 'operations',
+                message: language === 'Chinese' ? '请选择操作....' : language === 'Spanish' ? 'Por favor, seleccione las opciones....' : 'Please! Select options....',
+                type: 'list',
+                choices: [language === 'Chinese' ? '提款' : 'withdraw', language === 'Chinese' ? '检查余额' : 'checkbalance'],
             },
         ]);
-        if (amountAns.amount > myBalance) {
-            console.log('Insufficient balance!');
+        if (operationAns.operations === 'withdraw') {
+            let amountAns = await inquirer.prompt([
+                {
+                    name: 'amount',
+                    message: language === 'Chinese' ? '输入金额：' : language === 'Spanish' ? 'Ingrese su cantidad:' : 'Enter your amount:',
+                    type: 'number',
+                },
+            ]);
+            if (amountAns.amount > myBalance) {
+                console.log(language === 'Chinese' ? '余额不足!' : language === 'Spanish' ? 'Saldo insuficiente!' : 'Insufficient balance!');
+            }
+            else {
+                myBalance -= amountAns.amount;
+                console.log(language === 'Chinese' ? `提款成功！新余额：${myBalance}` : language === 'Spanish' ? `Retiro exitoso! Nuevo saldo: ${myBalance}` : `Withdrawal successful! New balance: ${myBalance}`);
+                // Transaction History
+                console.log(language === 'Chinese' ? '感谢您的银行业务！' : language === 'Spanish' ? '¡Gracias por operar con nosotros!' : 'Thank you for banking with us!');
+            }
         }
-        else {
-            myBalance -= amountAns.amount;
-            console.log(`Withdrawal successful! New balance: ${myBalance}`);
+        else if (operationAns.operations === 'checkbalance') {
+            console.log(language === 'Chinese' ? `您当前的余额是：${myBalance}` : language === 'Spanish' ? `Su saldo actual es: ${myBalance}` : `Your current balance is: ${myBalance}`);
+            // Transaction History
+            console.log(language === 'Chinese' ? '感谢您的银行业务！' : language === 'Spanish' ? '¡Gracias por operar con nosotros!' : 'Thank you for banking with us!');
         }
+        break; // Exit the loop after successful operation
     }
-    else if (operationAns.operations === 'checkbalance') {
-        console.log(`Your current balance is: ${myBalance}`);
+    else {
+        attempts++;
+        console.log(language === 'Chinese' ? '不正确的PIN码，请重试！' : language === 'Spanish' ? 'PIN incorrecto, intente de nuevo!' : 'Incorrect pincode, try again!');
     }
 }
-else {
-    console.log('Incorrect pincode, try again!');
+if (attempts === 3) {
+    console.log(language === 'Chinese' ? '您的账户已被暂时锁定！' : language === 'Spanish' ? 'Su cuenta ha sido bloqueada temporalmente!' : 'Your account has been temporarily locked!');
 }
