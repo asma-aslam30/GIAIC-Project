@@ -43,15 +43,15 @@ class CollegeImpl implements College {
         this.streams = [];
     }
 
-    addStream(stream: Stream) {
+    addStream(stream: Stream): void {
         this.streams.push(stream);
     }
 
-    addStudent(student: Student) {
+    addStudent(student: Student): void {
         this.students.push(student);
     }
 
-    apply(student: Student, stream: Stream) {
+    apply(student: Student, stream: Stream): void {
         if (student.marks >= stream.admissionCriteria) {
             console.log(`${student.name} has applied successfully for ${stream.name}.`);
             student.appliedStreams.push(stream);
@@ -60,7 +60,7 @@ class CollegeImpl implements College {
         }
     }
 
-    takeAdmission(student: Student, stream: Stream) {
+    takeAdmission(student: Student, stream: Stream): void {
         if (stream.seats > 0) {
             stream.reduceSeats(1);
             this.addStudent(student);
@@ -93,11 +93,11 @@ class UniversityImpl implements University {
         this.colleges = [];
     }
 
-    register(college: College) {
+    register(college: College): void {
         this.colleges.push(college);
     }
 
-    remove(college: College) {
+    remove(college: College): void {
         this.colleges = this.colleges.filter(col => col.id !== college.id);
     }
 }
@@ -113,7 +113,7 @@ class SearchByName implements Search {
         this.item = item;
     }
 
-    isSatisfied(college: College) {
+    isSatisfied(college: College): boolean {
         return college.name === this.item;
     }
 }
@@ -125,13 +125,13 @@ class SearchByStream implements Search {
         this.item = item;
     }
 
-    isSatisfied(college: College) {
+    isSatisfied(college: College): boolean {
         return college.streams.some(stream => stream.name === this.item);
     }
 }
 
 class BetterSearch {
-    search(colleges: College[], spec: Search) {
+    search(colleges: College[], spec: Search): College[] {
         return colleges.filter(college => spec.isSatisfied(college));
     }
 }
@@ -157,37 +157,45 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-rl.question('Enter student ID: ', (id) => {
-    rl.question('Enter student name: ', (name) => {
-        rl.question('Enter student marks: ', (marks) => {
-            const student: Student = {
-                id,
-                name,
-                marks: parseInt(marks),
-                appliedStreams: []
-            };
+const promptUser = async (question: string): Promise<string> => {
+    return new Promise((resolve) => rl.question(question, resolve));
+};
 
-            rl.question('Enter stream name to apply for: ', (streamName) => {
-                const selectedStream = college.streams.find(s => s.name === streamName);
+const main = async () => {
+    try {
+        const id = await promptUser('Enter student ID: ');
+        const name = await promptUser('Enter student name: ');
+        const marks = await promptUser('Enter student marks: ');
+        
+        const student: Student = {
+            id,
+            name,
+            marks: parseInt(marks),
+            appliedStreams: []
+        };
 
-                if (selectedStream) {
-                    college.apply(student, selectedStream);
+        const streamName = await promptUser('Enter stream name to apply for: ');
+        const selectedStream = college.streams.find(s => s.name === streamName);
 
-                    rl.question('Do you want to take admission? (yes/no): ', (answer) => {
-                        if (answer.toLowerCase() === 'yes') {
-                            college.takeAdmission(student, selectedStream);
-                        }
+        if (selectedStream) {
+            college.apply(student, selectedStream);
 
-                        const search = new BetterSearch();
-                        const results = search.search(university.colleges, new SearchByName("Engineering College"));
-                        console.log(results);
-                        rl.close();
-                    });
-                } else {
-                    console.log(`Stream ${streamName} not found.`);
-                    rl.close();
-                }
-            });
-        });
-    });
-});
+            const answer = await promptUser('Do you want to take admission? (yes/no): ');
+            if (answer.toLowerCase() === 'yes') {
+                college.takeAdmission(student, selectedStream);
+            }
+
+            const search = new BetterSearch();
+            const results = search.search(university.colleges, new SearchByName("Engineering College"));
+            console.log(results);
+        } else {
+            console.log(`Stream ${streamName} not found.`);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    } finally {
+        rl.close();
+    }
+};
+
+main();

@@ -97,34 +97,41 @@ const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
-rl.question('Enter student ID: ', (id) => {
-    rl.question('Enter student name: ', (name) => {
-        rl.question('Enter student marks: ', (marks) => {
-            const student = {
-                id,
-                name,
-                marks: parseInt(marks),
-                appliedStreams: []
-            };
-            rl.question('Enter stream name to apply for: ', (streamName) => {
-                const selectedStream = college.streams.find(s => s.name === streamName);
-                if (selectedStream) {
-                    college.apply(student, selectedStream);
-                    rl.question('Do you want to take admission? (yes/no): ', (answer) => {
-                        if (answer.toLowerCase() === 'yes') {
-                            college.takeAdmission(student, selectedStream);
-                        }
-                        const search = new BetterSearch();
-                        const results = search.search(university.colleges, new SearchByName("Engineering College"));
-                        console.log(results);
-                        rl.close();
-                    });
-                }
-                else {
-                    console.log(`Stream ${streamName} not found.`);
-                    rl.close();
-                }
-            });
-        });
-    });
-});
+const promptUser = async (question) => {
+    return new Promise((resolve) => rl.question(question, resolve));
+};
+const main = async () => {
+    try {
+        const id = await promptUser('Enter student ID: ');
+        const name = await promptUser('Enter student name: ');
+        const marks = await promptUser('Enter student marks: ');
+        const student = {
+            id,
+            name,
+            marks: parseInt(marks),
+            appliedStreams: []
+        };
+        const streamName = await promptUser('Enter stream name to apply for: ');
+        const selectedStream = college.streams.find(s => s.name === streamName);
+        if (selectedStream) {
+            college.apply(student, selectedStream);
+            const answer = await promptUser('Do you want to take admission? (yes/no): ');
+            if (answer.toLowerCase() === 'yes') {
+                college.takeAdmission(student, selectedStream);
+            }
+            const search = new BetterSearch();
+            const results = search.search(university.colleges, new SearchByName("Engineering College"));
+            console.log(results);
+        }
+        else {
+            console.log(`Stream ${streamName} not found.`);
+        }
+    }
+    catch (error) {
+        console.error('Error:', error);
+    }
+    finally {
+        rl.close();
+    }
+};
+main();
